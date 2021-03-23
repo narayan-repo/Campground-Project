@@ -1,0 +1,11 @@
+.jumbotron {
+    margin-bottom: 30px;
+    padding: 2rem;
+    background: aqua;
+    text-align: center;
+}
+
+.row{
+    display: flex;
+    flex-wrap: wrap;
+}
