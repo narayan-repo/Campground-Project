@@ -1,8 +1,9 @@
 .jumbotron {
     margin-bottom: 30px;
     padding: 2rem;
-    background: aqua;
+    background: darkblue;
     text-align: center;
+    color: white;
 }
 
 .row{

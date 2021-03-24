@@ -1,68 +1,69 @@
-const express = require('express');
-const app = express();
+const express   = require('express'),
+    bodyParser  = require('body-parser'),
+    app         = express(),
+    mongoose    = require('mongoose');
 
-const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({extended:true}));
 
 app.set('view engine','ejs');
+
 app.use(express.static('public'))
-let campgrounds = [
-    {
-        name: "Thanda Tirpol",
-        img : "https://images.unsplash.com/photo-1533597818151-d1071f26fe32?ixid=MXwxMjA3fDB8MHxzZWFyY2h8Mnx8Y2FtcGdyb3VuZHxlbnwwfDJ8MHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
-    },
-    {
-        name: "Gorom Baashbagan",
-        img: "https://images.unsplash.com/photo-1534685157449-86b12aed151e?ixid=MXwxMjA3fDB8MHxzZWFyY2h8MXx8Y2FtcGdyb3VuZHxlbnwwfDJ8MHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
-    },
-    {
-        name: "Neutral Room",
-        img: "https://images.unsplash.com/photo-1564084372010-3f5f8c6c095a?ixid=MXwxMjA3fDB8MHxzZWFyY2h8M3x8Y2FtcGdyb3VuZHxlbnwwfDJ8MHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
-    },
-    {
-        name: "Thanda Tirpol",
-        img : "https://images.unsplash.com/photo-1533597818151-d1071f26fe32?ixid=MXwxMjA3fDB8MHxzZWFyY2h8Mnx8Y2FtcGdyb3VuZHxlbnwwfDJ8MHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
-    },
-    {
-        name: "Gorom Baashbagan",
-        img: "https://images.unsplash.com/photo-1534685157449-86b12aed151e?ixid=MXwxMjA3fDB8MHxzZWFyY2h8MXx8Y2FtcGdyb3VuZHxlbnwwfDJ8MHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
-    },
-    {
-        name: "Neutral Room",
-        img: "https://images.unsplash.com/photo-1564084372010-3f5f8c6c095a?ixid=MXwxMjA3fDB8MHxzZWFyY2h8M3x8Y2FtcGdyb3VuZHxlbnwwfDJ8MHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
-    },
-    {
-        name: "Thanda Tirpol",
-        img : "https://images.unsplash.com/photo-1533597818151-d1071f26fe32?ixid=MXwxMjA3fDB8MHxzZWFyY2h8Mnx8Y2FtcGdyb3VuZHxlbnwwfDJ8MHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
-    },
-    {
-        name: "Gorom Baashbagan",
-        img: "https://images.unsplash.com/photo-1534685157449-86b12aed151e?ixid=MXwxMjA3fDB8MHxzZWFyY2h8MXx8Y2FtcGdyb3VuZHxlbnwwfDJ8MHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
-    },
-    {
-        name: "Neutral Room",
-        img: "https://images.unsplash.com/photo-1564084372010-3f5f8c6c095a?ixid=MXwxMjA3fDB8MHxzZWFyY2h8M3x8Y2FtcGdyb3VuZHxlbnwwfDJ8MHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
-    }
-]
+
+//database connection
+mongoose.connect("mongodb://localhost:27017/yelp_camp",{
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+});
+
+//schema setup
+let campground_schema = new mongoose.Schema({
+    name: String,
+    img: String,
+    description: String
+})
+
+let Campground = mongoose.model("Campground",campground_schema)
 
 app.get('/',(req, res) => {
     res.render("landing")
 })
 
-app.get('/campgrounds',(req, res) => {
-    res.render("campgrounds",{campgrounds:campgrounds})
+app.get('/index',(req, res) => {
+    Campground.find({},((err, campgrounds) => {
+        if(err) throw err;
+        res.render("index",{campgrounds:campgrounds})
+    }))
+
 })
 
-app.post('/campgrounds', (req, res) => {
-    const name = req.body.name;
-    const url = req.body.url;
-    const newCampground = {name: name,img: url}
-    campgrounds.push(newCampground);
-    res.redirect('/campgrounds')
+app.post('/index', (req, res) => {
+    const camp_name = req.body.name;
+    const camp_url = req.body.url;
+    const camp_desc = req.body.description;
+    Campground.create(
+        {
+            name: camp_name,
+            img: camp_url,
+            description: camp_desc
+        }, (err, newCamp) => {
+            if(err) throw err;
+            console.log(newCamp);
+        }
+    )
+    res.redirect('/index')
 })
 
-app.get('/campgrounds/new',(req, res) => {
+app.get('/index/new',(req, res) => {
     res.render('new')
+})
+//SHOW - shows more info about one campground
+app.get('/index/:id',(req, res) => {
+    Campground.findById(req.params.id,(err,foundCampground)=>{
+        if(err)
+            console.log(err)
+        else
+            res.render('show',{campground: foundCampground})
+    })
 })
 
 app.listen(3000,()=>{
